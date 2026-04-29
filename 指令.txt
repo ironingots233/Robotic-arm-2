@@ -1,0 +1,220 @@
+lerobot-train \
+  --dataset.repo_id=local/cocacola_video \
+  --dataset.root=/home/hzy/mybot/data/cocacola_video \
+  --dataset.streaming=false \
+  --dataset.use_imagenet_stats=true \
+  --dataset.video_backend=pyav \
+  --policy.type=act \
+  --output_dir=/home/hzy/mybot/output_lerobot_train/cocacola \
+  --job_name=pickup_job \
+  --policy.device=cuda \
+  --wandb.enable=true \
+  --wandb.project=Lerobot_HZY_Project \
+  --steps=300000 \
+  --batch_size=48 \
+  --save_freq=4000 \
+  --num_workers=8 \
+  --policy.push_to_hub=false \
+  --policy.repo_id=hzy/my_act_policy
+
+lerobot-train \
+  --config_path=/home/hzy/mybot/output_lerobot_train/pickblock/checkpoints/last/pretrained_model/train_config.json \
+  --resume=true
+
+
+
+转视频
+
+lerobot-edit-dataset \
+  --repo_id local/cocacola \
+  --root /home/hzy/mybot/data/cocacola \
+  --new_repo_id local/cocacola_video \
+  --new_root /home/hzy/mybot/data/cocacola_video \
+  --operation.type convert_image_to_video \
+  --operation.num_workers 8
+
+lerobot-edit-dataset \
+  --repo_id local/my_dualcam_6dof_dataset \
+  --root /home/hzy/mybot/data/pickblock \
+  --new_repo_id local/pickblock_video \
+  --new_root /home/hzy/mybot/data/pickblock_video \
+  --operation.type convert_image_to_video \
+  --operation.num_workers 8
+
+
+smolvla
+
+export HF_ENDPOINT=https://hf-mirror.com
+
+lerobot-train \
+  --dataset.repo_id=hzy/pickup_vla \
+  --dataset.root=/home/hzy/mybot/data/pickup_video \
+  --dataset.revision=v0.1.0 \
+  --dataset.streaming=false \
+  --policy.type=smolvla \
+  --policy.pretrained_path=lerobot/smolvla_base \
+  --output_dir=/home/hzy/mybot/output_lerobot_train/vla/smolvla_finetuned \
+  --job_name=finetune_smolvla \
+  --policy.device=cuda \
+  --wandb.enable=true \
+  --wandb.project=Lerobot_Zihao_Project \
+  --policy.push_to_hub=false \
+  --steps=40000 \
+  --batch_size=32 \
+  --num_workers=0
+
+lerobot-dataset-viz \
+    --repo-id my_dualcam_6dof_dataset \
+    --root /home/hzy/mybot/data/pickblock \
+    --mode local \
+    --episode-index 0
+
+  --dataset.repo_id=local/pickblock_video \
+  --dataset.root=/home/hzy/mybot/data/pickblock_video \
+  --dataset.streaming=false \
+  --dataset.use_imagenet_stats=true \
+  --dataset.video_backend=pyav \
+  --policy.type=act \
+  --output_dir=output_lerobot_train/pickblock \
+  --job_name=pickup_job \
+  --policy.device=cuda \
+  --wandb.enable=true \
+  --wandb.project=Lerobot_HZY_Project \
+  --steps=300000 \
+  --batch_size=48 \
+  --save_freq=4000 \
+  --num_workers=8 \
+  --policy.push_to_hub=false \
+  --policy.repo_id=hzy/my_act_policy
+INFO 2026-04-19 17:37:33 ot_train.py:197 {'batch_size': 48,
+ 'checkpoint_path': None,
+ 'cudnn_deterministic': False,
+ 'dataset': {'episodes': None,
+             'image_transforms': {'enable': False,
+                                  'max_num_transforms': 3,
+                                  'random_order': False,
+                                  'tfs': {'affine': {'kwargs': {'degrees': [-5.0,
+                                                                            5.0],
+                                                                'translate': [0.05,
+                                                                              0.05]},
+                                                     'type': 'RandomAffine',
+                                                     'weight': 1.0},
+                                          'brightness': {'kwargs': {'brightness': [0.8,
+                                                                                   1.2]},
+                                                         'type': 'ColorJitter',
+                                                         'weight': 1.0},
+                                          'contrast': {'kwargs': {'contrast': [0.8,
+                                                                               1.2]},
+                                                       'type': 'ColorJitter',
+                                                       'weight': 1.0},
+                                          'hue': {'kwargs': {'hue': [-0.05,
+                                                                     0.05]},
+                                                  'type': 'ColorJitter',
+                                                  'weight': 1.0},
+                                          'saturation': {'kwargs': {'saturation': [0.5,
+                                                                                   1.5]},
+                                                         'type': 'ColorJitter',
+                                                         'weight': 1.0},
+                                          'sharpness': {'kwargs': {'sharpness': [0.5,
+                                                                                 1.5]},
+                                                        'type': 'SharpnessJitter',
+                                                        'weight': 1.0}}},
+             'repo_id': 'local/pickblock_video',
+             'revision': None,
+             'root': '/home/hzy/mybot/data/pickblock_video',
+             'streaming': False,
+             'use_imagenet_stats': True,
+             'video_backend': 'pyav'},
+ 'env': None,
+ 'eval': {'batch_size': 11, 'n_episodes': 50, 'use_async_envs': True},
+ 'eval_freq': 20000,
+ 'job_name': 'pickup_job',
+ 'log_freq': 200,
+ 'num_workers': 8,
+ 'optimizer': {'betas': [0.9, 0.999],
+               'eps': 1e-08,
+               'grad_clip_norm': 10.0,
+               'lr': 1e-05,
+               'type': 'adamw',
+               'weight_decay': 0.0001},
+ 'output_dir': 'output_lerobot_train/pickblock',
+ 'peft': None,
+ 'policy': {'chunk_size': 100,
+            'device': 'cuda',
+            'dim_feedforward': 3200,
+            'dim_model': 512,
+            'dropout': 0.1,
+            'feedforward_activation': 'relu',
+            'input_features': {},
+            'kl_weight': 10.0,
+            'latent_dim': 32,
+            'license': None,
+            'n_action_steps': 100,
+            'n_decoder_layers': 1,
+            'n_encoder_layers': 4,
+            'n_heads': 8,
+            'n_obs_steps': 1,
+            'n_vae_encoder_layers': 4,
+            'normalization_mapping': {'ACTION': <NormalizationMode.MEAN_STD: 'MEAN_STD'>,
+                                      'STATE': <NormalizationMode.MEAN_STD: 'MEAN_STD'>,
+                                      'VISUAL': <NormalizationMode.MEAN_STD: 'MEAN_STD'>},
+            'optimizer_lr': 1e-05,
+            'optimizer_lr_backbone': 1e-05,
+            'optimizer_weight_decay': 0.0001,
+            'output_features': {},
+            'pre_norm': False,
+            'pretrained_backbone_weights': 'ResNet18_Weights.IMAGENET1K_V1',
+            'pretrained_path': None,
+            'private': None,
+            'push_to_hub': False,
+            'replace_final_stride_with_dilation': False,
+            'repo_id': 'hzy/my_act_policy',
+            'tags': None,
+            'temporal_ensemble_coeff': None,
+            'type': 'act',
+            'use_amp': False,
+            'use_peft': False,
+            'use_vae': True,
+            'vision_backbone': 'resnet18'},
+ 'rabc_epsilon': 1e-06,
+ 'rabc_head_mode': 'sparse',
+ 'rabc_kappa': 0.01,
+ 'rabc_progress_path': None,
+ 'rename_map': {},
+ 'resume': False,
+ 'save_checkpoint': True,
+ 'save_freq': 4000,
+ 'scheduler': None,
+ 'seed': 1000,
+ 'steps': 300000,
+ 'tolerance_s': 0.0001,
+ 'use_policy_training_preset': True,
+ 'use_rabc': False,
+ 'wandb': {'add_tags': True,
+           'disable_artifact': False,
+           'enable': True,
+           'entity': None,
+           'mode': None,
+           'notes': None,
+           'project': 'Lerobot_HZY_Project',
+           'run_id': None}}
+INFO 2026-04-19 17:37:51 db_utils.py:117 Logs will be synced with wandb.
+INFO 2026-04-19 17:37:51 db_utils.py:118 Track this run --> https://wandb.ai/ironingots233-shantou-university/Lerobot_HZY_Project/runs/yinr2c7y
+INFO 2026-04-19 17:37:51 ot_train.py:221 Creating dataset
+INFO 2026-04-19 17:37:51 eo_utils.py:108 Using video codec: libsvtav1
+Traceback (most recent call last):
+  File "/home/hzy/miniconda3/envs/mibot/bin/lerobot-train", line 6, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "/home/hzy/mybot/lerobot/src/lerobot/scripts/lerobot_train.py", line 563, in main
+    train()
+    ~~~~~^^
+  File "/home/hzy/mybot/lerobot/src/lerobot/configs/parser.py", line 233, in wrapper_inner
+    response = fn(cfg, *args, **kwargs)
+  File "/home/hzy/mybot/lerobot/src/lerobot/scripts/lerobot_train.py", line 222, in train
+    dataset = make_dataset(cfg)
+  File "/home/hzy/mybot/lerobot/src/lerobot/datasets/factory.py", line 129, in make_dataset
+    dataset.meta.stats[key][stats_type] = torch.tensor(stats, dtype=torch.float32)
+    ~~~~~~~~~~~~~~~~~~^^^^^
+KeyError: 'observation.images.global'
+
